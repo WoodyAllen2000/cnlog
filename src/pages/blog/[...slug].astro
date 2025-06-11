@@ -1,7 +1,6 @@
 ---
 import {getCollection} from 'astro:content';
 import {excludeDrafts} from "@/functions";
-import PostLayout from "@/layouts/PostLayout.astro";
 import SimpleLayout from "@/layouts/SimplePostLayout.astro";
 
 export async function getStaticPaths() {
@@ -12,8 +11,6 @@ export async function getStaticPaths() {
     props: {post, next: posts[index + 1], prev: posts[index - 1]},
   }));
 }
-
-const postLayout = Astro.props.post.data.postLayout;
 ---
 
-{postLayout === 'simple' ?<SimpleLayout {...Astro.props}/> :<PostLayout {...Astro.props}/>}
+<SimpleLayout {...Astro.props}/>
