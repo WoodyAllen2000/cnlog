@@ -4,9 +4,6 @@ import { type CollectionEntry, getCollection } from "astro:content";
 
 import SocialIcon from "@/components/social-icons/index.astro";
 import RootLayout from "./RootLayout.astro";
-import Link from "../components/Link.astro";
-import { sortBlogPosts } from "../functions";
-import { ITEMS_PER_PAGE } from "../consts";
 import { useTranslations } from "@/i18n";
 
 const t = useTranslations();
@@ -27,20 +24,6 @@ const {
   twitter,
   shortBio,
 } = Astro.props.content;
-
-// Get the author's posts
-const authorPosts = await getCollection(
-  "blog",
-  ({ data: { authors, draft } }) => {
-    return !draft && authors.some((author) => author.slug === Astro.props.slug);
-  }
-)
-  .then(sortBlogPosts)
-  .then((posts) => {
-    return posts.slice(0, ITEMS_PER_PAGE).map((post) => {
-      return { title: post.data.title, slug: post.slug };
-    });
-  });
 ---
 
 <RootLayout title={name} description={shortBio}>
@@ -83,22 +66,6 @@ const authorPosts = await getCollection(
         <div class="prose pb-8 pt-8 dark:prose-invert">
           <slot />
         </div>
-        {
-          authorPosts.length > 0 && (
-            <div class="pt-8">
-              <h2 class="text-2xl font-bold leading-8 tracking-tight">
-                {t("layouts.authorLayout.latestPosts")}
-              </h2>
-              <ul class="space-y-4 mt-4">
-                {authorPosts.map(({ slug, title }) => (
-                  <li>
-                    <Link href={`/blog/${slug}`}>{title}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )
-        }
       </div>
     </div>
   </div>
