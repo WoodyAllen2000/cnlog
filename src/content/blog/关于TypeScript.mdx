@@ -1,0 +1,116 @@
+---
+title: 关于 Typescript
+date: 2025-06-12
+summary: 对于 TypeScript官方文档的学习心得
+tags: ["typescript"]
+---
+
+TypeScript 的最大意义是在JS的基础上增加了 type system 的 feat，帮助 editor 在我们写出有问题的代码时给出提示，减少出错的情况。另外在 AI 时代，type system 有助于 AI 生成更 robust 的代码。
+
+## Types by Inference
+
+TypeScript 会在 JS基础上自动推断出 type，所以所有JS代码都是TS代码。
+```typescript
+let hello = "Hello World"; // JS
+let hello: string = "Hello World"; //TS
+```
+
+## Defining Types
+
+无非有两种定义 types 的方式，interfces 和 types。两种方法的区别在于，类型别名不能重新开放类型以添加新的属性，而接口可以。对我而言，对于对象类型的 vriables，最好使用interface，更为直观。
+```typescript
+interface BirdInterface {
+  wings: 2;
+}
+
+interface Chicken extends BirdInterface {
+  colourful: false;
+  flies: false;
+}
+
+let chicken: Chicken = { wings: 2, colourful: false, flies: false };
+```
+
+JS中的七种基本类型我们可以直接使用：number, string, bigint, boolean, null, undefined, symbol。这里面涉及集合set的概念，所有能直接用的类型是一个set，同时每一个类型本身也是一个set。TS拓展了set，增加了any, unknown( 使用时需提前说明 ), never( 永远不会出现，是所有type的子集 ), void。
+
+## Composing Types
+
+文档提及创造新的type的方式，一种是用unions并集，另一种是泛型generics。
+
+### unions
+
+unions不难理解，前面已经提到每一个type都是一个集合，两个或以上的集合相并会形成新的集合。
+
+```typescript
+type MyBool = true | false;
+type WindowStates = "open" | "closed" | "minimized";
+type LockStates = "locked" | "unlocked";
+type PositiveOddNumbersUnderTen = 1 | 3 | 5 | 7 | 9;
+
+function getLength(obj: string | string[]) {
+  return obj.length;
+}
+```
+
+### generics
+
+关键在于：Generics provide variables to types. 泛型让类型也能像变量一样被“参数化”和“复用”。
+```typescript
+type StringArray = Array<string>;
+type NumberArray = Array<number>;
+type ObjectWithNameArray = Array<{ name: string }>;
+
+interface Backpack<T> {
+  add: (obj: T) => void;
+  get:() => T;
+}
+
+declare const backpack: Backpack<string>;
+const object = backpack.get(); // object is a string
+backpack.add(23); // 报错 backpack variable type is string, we can't pass a number to add function
+```
+
+## Structural Type System
+
+TypeScript 只比较值的结构。One of TypeScript’s core principles is that type checking focuses on the *shape* that values have. This is sometimes called “duck typing” or “structural typing”. 
+shape-matching: 如果两个objects的结构相同，那么它们就被认为是同一个type。
+
+```typescript
+interface Point {
+  x: number;
+  y: number;
+}
+
+function logPoint(p: Point) {
+  console.log(`${p.x}, ${p.y}`);
+}
+
+const point = { x: 26, y: 13 };
+logPoint(point); // log "26, 13" 没有显示指定point的type，但由于有相同结构，ts判断属同一个类型
+```
+
+在做shape-matching时，only requires a subset of the object’s fields to match.
+```typescript
+const point3 = { x: 12, y: 26, z: 89 };
+logPoint(point3); // logs "12, 26"
+ 
+const rect = { x: 33, y: 3, width: 30, height: 80 };
+logPoint(rect); // logs "33, 3"
+```
+
+There is no difference between how classes and objects conform to shapes:
+
+```typescript
+class VirtualPoint {
+  x: number;
+  y: number;
+ 
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+}
+ 
+const newVPoint = new VirtualPoint(13, 56);
+logPoint(newVPoint); // logs "13, 56"
+```
